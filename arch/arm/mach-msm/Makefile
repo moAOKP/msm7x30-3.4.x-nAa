@@ -313,6 +313,8 @@ obj-$(CONFIG_MACH_SEMC_SATSUMA) += board-semc_mogami.o board-semc_mogami-rfkill.
 bluedroid-objs	= board-semc_mogami-bluedroid.o
 obj-$(CONFIG_MOGAMI_BLUEDROID) += bluedroid.o
 
+obj-$(CONFIG_MACH_SEMC_ZEUS) += board-semc_zeus.o
+
 obj-$(CONFIG_MACH_SAPPHIRE) += board-sapphire.o board-sapphire-gpio.o
 obj-$(CONFIG_MACH_SAPPHIRE) += board-sapphire-keypad.o board-sapphire-panel.o
 obj-$(CONFIG_MACH_SAPPHIRE) += board-sapphire-mmc.o board-sapphire-wifi.o
