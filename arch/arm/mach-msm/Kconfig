@@ -2775,4 +2775,10 @@ config MSM_HSIC_SYSMON_TEST
 	  can be read and written to send character data to the sysmon port of
 	  the modem over USB.
 
+config MOGAMI_BLUEDROID
+	bool "Mogami BlueDroid support"
+	depends on BT_WILINK && TI_ST && ST_HCI && UHID
+	help
+	  Mogami BlueDroid support
+
 endif

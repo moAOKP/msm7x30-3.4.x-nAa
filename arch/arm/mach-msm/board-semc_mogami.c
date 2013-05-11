@@ -273,7 +273,7 @@
 #define VREG_L15	"gp6"	/* LCD */
 #define VREG_L20	"gp13"	/* Touch */
 
-#ifdef CONFIG_BLUEDROID
+#ifdef CONFIG_MOGAMI_BLUEDROID
 #include <linux/skbuff.h>
 #include <linux/ti_wilink_st.h>
 #define WILINK_UART_DEV_NAME "/dev/ttyHS0"
@@ -5060,7 +5060,7 @@ static int bluetooth_power(int on)
 	return 0;
 }
 
-#ifdef CONFIG_BLUEDROID
+#ifdef CONFIG_MOGAMI_BLUEDROID
 static int wilink_enable(struct kim_data_s *data)
 {
 	bluetooth_power(1);
@@ -5541,7 +5541,7 @@ static struct platform_device *devices[] __initdata = {
 	&slider_device_mogami,
 #endif
 #ifdef CONFIG_BT
-#ifndef CONFIG_BLUEDROID
+#ifndef CONFIG_MOGAMI_BLUEDROID
 	&mogami_device_rfkill,
 #endif
 #endif
@@ -7056,7 +7056,7 @@ static void __init msm7x30_init(void)
 	msm7x30_init_nand();
 #ifdef CONFIG_BT
 	bluetooth_power(0);
-#ifdef CONFIG_BLUEDROID
+#ifdef CONFIG_MOGAMI_BLUEDROID
 	mogami_wl1271_wilink();
 #endif
 #endif
