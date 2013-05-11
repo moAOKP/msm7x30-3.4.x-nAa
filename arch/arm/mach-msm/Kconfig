@@ -1908,6 +1908,15 @@ config MOGAMI_VIBRATOR_ON_VOLTAGE
 	help
 	  Set value in milli voltage(mV). Default voltage is 2700mV.
 
+config MOGAMI_BLUEDROID
+	bool "Mogami BlueDroid support"
+	select BT_WILINK
+	select TI_ST
+	select ST_HCI
+	select UHID
+	help
+	  Mogami BlueDroid support using TI ST stack
+
 config MSM_SLEEP_TIME_OVERRIDE
 	bool "Allow overriding suspend/sleep time with PM module parameter"
 	default y
@@ -2774,11 +2783,5 @@ config MSM_HSIC_SYSMON_TEST
 	  This will create a debugfs file entry named "hsic_sysmon_test" which
 	  can be read and written to send character data to the sysmon port of
 	  the modem over USB.
-
-config MOGAMI_BLUEDROID
-	bool "Mogami BlueDroid support"
-	depends on BT_WILINK && TI_ST && ST_HCI && UHID
-	help
-	  Mogami BlueDroid support
 
 endif
