@@ -277,7 +277,6 @@
 #include <linux/skbuff.h>
 #include <linux/ti_wilink_st.h>
 #define WILINK_UART_DEV_NAME "/dev/ttyHS0"
-static struct wake_lock wilink_wk_lock;
 #endif
 
 /* Platform specific HW-ID GPIO mask */
@@ -5078,9 +5077,7 @@ static int bluetooth_power(int on)
 #ifdef CONFIG_MOGAMI_BLUEDROID
 static int wilink_enable(struct kim_data_s *data)
 {
-	// Do we need a wakelock here?
 	bluetooth_power(1);
-	wake_lock(&wilink_wk_lock);
 	pr_info("%s\n", __func__);
 	return 0;
 }
@@ -5088,7 +5085,6 @@ static int wilink_enable(struct kim_data_s *data)
 static int wilink_disable(struct kim_data_s *data)
 {
 	bluetooth_power(0);
-	wake_unlock(&wilink_wk_lock);
 	pr_info("%s\n", __func__);
 	return 0;
 }
@@ -5143,10 +5139,8 @@ static struct platform_device wl1271_device = {
 
 static noinline void __init mogami_wl1271_wilink(void)
 {
-	wake_lock_init(&wilink_wk_lock, WAKE_LOCK_SUSPEND, "wilink_wk_lock");
 	platform_device_register(&wl1271_device);
 	platform_device_register(&btwilink_device);
-
 	return;
 }
 #else
