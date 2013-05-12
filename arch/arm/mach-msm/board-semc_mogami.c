@@ -5030,6 +5030,8 @@ static struct msm_panel_common_pdata mdp_pdata = {
 };
 
 #ifdef CONFIG_BT
+static int bt_on = 0;
+
 static uint32_t bt_config_on_gpios[] = {
 	GPIO_CFG(134, 1, GPIO_CFG_OUTPUT, GPIO_CFG_NO_PULL, GPIO_CFG_4MA),
 	GPIO_CFG(135, 1, GPIO_CFG_INPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA),
@@ -5048,15 +5050,17 @@ static uint32_t bt_config_off_gpios[] = {
 
 static int bluetooth_power(int on)
 {
-	if (on) {
+	// Do we need a spinlock here?
+	if (on && !bt_on) {
 		config_gpio_table(bt_config_on_gpios,
 				  ARRAY_SIZE(bt_config_on_gpios));
 		gpio_set_value(103, 1);
-	} else {
+	} else if (!on && bt_on) {
 		gpio_set_value(103, 0);
 		config_gpio_table(bt_config_off_gpios,
 				  ARRAY_SIZE(bt_config_off_gpios));
 	}
+	bt_on = on;
 	return 0;
 }
 
