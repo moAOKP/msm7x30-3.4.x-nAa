@@ -77,9 +77,11 @@
 #ifdef CONFIG_INPUT_APDS9702
 #include <linux/apds9702.h>
 #endif
-#if defined(CONFIG_LM3560) || defined(CONFIG_LM3561)
-#include <linux/lm356x.h>
-#define LM356X_HW_RESET_GPIO 2
+#ifdef CONFIG_LM3560_FLASHLED
+#include <linux/lm3560.h>
+#endif
+#ifdef CONFIG_LM3561_FLASHLED
+#include <linux/lm3561.h>
 #endif
 
 #ifdef CONFIG_FB_MSM_MDDI_NOVATEK_FWVGA
@@ -2639,69 +2641,76 @@ static char *hsusb_chg_supplied_to[] = {
 	BQ27520_NAME,
 };
 
-#if defined(CONFIG_LM3560) || defined(CONFIG_LM3561)
-int lm356x_request_gpio_pins(void)
+#if defined(CONFIG_LM3560_FLASHLED) || defined(CONFIG_LM3561_FLASHLED)
+#define LM356x_HW_RESET_GPIO 2
+
+static int lm356x_pwr(struct device *dev, bool request)
 {
-	int result;
+	dev_dbg(dev, "%s: request %d\n", __func__, request);
 
-	result = gpio_request(LM356X_HW_RESET_GPIO, "LM356X hw reset");
-	if (result)
-		return result;
-
-	gpio_set_value(LM356X_HW_RESET_GPIO, 1);
-
-	udelay(20);
-	return result;
+	if (request) {
+		gpio_set_value(LM356x_HW_RESET_GPIO, 1);
+		udelay(20);
+	} else {
+		gpio_set_value(LM356x_HW_RESET_GPIO, 0);
+	}
+	return 0;
 }
 
-int lm356x_release_gpio_pins(void)
+static int lm356x_platform_init(struct device *dev, bool request)
 {
+	int rc;
 
-	gpio_set_value(LM356X_HW_RESET_GPIO, 0);
-	gpio_free(LM356X_HW_RESET_GPIO);
-
-	return 0;
+	if (request) {
+		rc = gpio_request(LM356x_HW_RESET_GPIO, "LM3560 hw reset");
+		if (rc)
+			goto err;
+	} else {
+		rc = 0;
+		gpio_free(LM356x_HW_RESET_GPIO);
+	}
+err:
+	if (rc)
+		dev_err(dev, "%s: failed rc %d\n", __func__, rc);
+	return rc;
 }
 #endif
 
-#ifdef CONFIG_LM3560
-static struct lm356x_platform_data lm3560_platform_data = {
-	.hw_enable              = lm356x_request_gpio_pins,
-	.hw_disable             = lm356x_release_gpio_pins,
+#ifdef CONFIG_LM3560_FLASHLED
+static struct lm3560_platform_data lm3560_platform_data = {
+	.power			= lm356x_pwr,
+	.platform_init          = lm356x_platform_init,
 	.led_nums		= 2,
-	.strobe_trigger		= LM356X_STROBE_TRIGGER_EDGE,
-	.privacy_terminate	= LM356X_PRIVACY_MODE_TURN_BACK,
+	.strobe_trigger		= LM3560_STROBE_TRIGGER_EDGE,
+	.privacy_terminate	= LM3560_PRIVACY_MODE_TURN_BACK,
 	.privacy_led_nums	= 1,
 	.privacy_blink_period	= 0, /* No bliking */
 	.current_limit		= 2300000, /* uA */
-	.flash_sync		= LM356X_SYNC_OFF,
-	.strobe_polarity	= LM356X_STROBE_POLARITY_HIGH,
-	.ledintc_pin_setting	= LM356X_LEDINTC_NTC_THERMISTOR_INPUT,
-	.tx1_polarity		= LM356X_TX1_POLARITY_HIGH,
-	.tx2_polarity		= LM356X_TX2_POLARITY_HIGH,
-	.hw_torch_mode		= LM356X_HW_TORCH_MODE_DISABLE,
+	.flash_sync		= LM3560_SYNC_OFF,
+	.strobe_polarity	= LM3560_STROBE_POLARITY_HIGH,
+	.ledintc_pin_setting	= LM3560_LEDINTC_NTC_THERMISTOR_INPUT,
+	.tx1_polarity		= LM3560_TX1_POLARITY_HIGH,
+	.tx2_polarity		= LM3560_TX2_POLARITY_HIGH,
+	.hw_torch_mode		= LM3560_HW_TORCH_MODE_DISABLE,
 };
 #endif
-#ifdef CONFIG_LM3561
-static struct lm356x_platform_data lm3561_platform_data = {
-	.hw_enable              = lm356x_request_gpio_pins,
-	.hw_disable             = lm356x_release_gpio_pins,
+#ifdef CONFIG_LM3561_FLASHLED
+static struct lm3561_platform_data lm3561_platform_data = {
+	.power			= lm356x_pwr,
+	.platform_init          = lm356x_platform_init,
 	.led_nums		= 1,
-	.strobe_trigger		= LM356X_STROBE_TRIGGER_EDGE,
-	.privacy_terminate	= LM356X_PRIVACY_MODE_TURN_BACK,
-	.privacy_led_nums	= 0,
-	.privacy_blink_period	= 0, /* No bliking */
+	.strobe_trigger		= LM3561_STROBE_TRIGGER_EDGE,
 	.current_limit		= 1000000, /* uA
 				   selectable value are 1500mA or 1000mA.
 				   if set other value,
 				   it assume current limit is 1000mA.
 				*/
-	.flash_sync		= LM356X_SYNC_OFF,
-	.strobe_polarity	= LM356X_STROBE_POLARITY_HIGH,
-	.ledintc_pin_setting	= LM356X_LEDINTC_NTC_THERMISTOR_INPUT,
-	.tx1_polarity		= LM356X_TX1_POLARITY_HIGH,
-	.tx2_polarity		= LM356X_TX2_POLARITY_HIGH,
-	.hw_torch_mode		= LM356X_HW_TORCH_MODE_DISABLE,
+	.flash_sync		= LM3561_SYNC_OFF,
+	.strobe_polarity	= LM3561_STROBE_POLARITY_HIGH,
+	.ledintc_pin_setting	= LM3561_LEDINTC_NTC_THERMISTOR_INPUT,
+	.tx1_polarity		= LM3561_TX1_POLARITY_HIGH,
+	.tx2_polarity		= LM3561_TX2_POLARITY_HIGH,
+	.hw_torch_mode		= LM3561_HW_TORCH_MODE_DISABLE,
 };
 #endif
 
@@ -2878,15 +2887,17 @@ static struct i2c_board_info msm_i2c_board_info[] = {
 		.platform_data = &akm8975_platform_data,
 	},
 #endif
-#ifdef CONFIG_LM3560
+#ifdef CONFIG_LM3560_FLASHLED
 	{
-		I2C_BOARD_INFO("lm3560", 0xA6 >> 1),
+		/* Config-spec is 8-bit = 0xa6, src-code need 7-bit => 0x53 */
+		I2C_BOARD_INFO(LM3560_DRV_NAME, 0xa6 >> 1),
 		.platform_data = &lm3560_platform_data,
 	},
 #endif
-#ifdef CONFIG_LM3561
+#ifdef CONFIG_LM3561_FLASHLED
 	{
-		I2C_BOARD_INFO("lm3561", 0xA6 >> 1),
+		/* Config-spec is 8-bit = 0xa6, src-code need 7-bit => 0x53 */
+		I2C_BOARD_INFO(LM3561_DRV_NAME, 0xa6 >> 1),
 		.platform_data = &lm3561_platform_data,
 	},
 #endif
