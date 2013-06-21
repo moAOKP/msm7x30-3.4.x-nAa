@@ -201,10 +201,11 @@
 #define MSM_FB_SIZE roundup(MSM_FB_PRIM_BUF_SIZE + MSM_FB_EXT_BUF_SIZE, 4096)
 
 #ifdef CONFIG_SEMC_CAMERA_8MP
-#define MSM_PMEM_ADSP_SIZE      0x2500000
+#define MSM_PMEM_CAMERA_SIZE    0x3200000
 #else
-#define MSM_PMEM_ADSP_SIZE      0x1C00000
+#define MSM_PMEM_CAMERA_SIZE    0x3200000
 #endif
+#define MSM_PMEM_ADSP_SIZE      0x1C00000
 #define PMEM_KERNEL_EBI0_SIZE   0x600000
 
 #define PMIC_GPIO_INT		27
@@ -3402,10 +3403,23 @@ static struct android_pmem_platform_data android_pmem_adsp_pdata = {
 	.memory_type = MEMTYPE_EBI0,
 };
 
+static struct android_pmem_platform_data android_pmem_camera_pdata = {
+       .name = "pmem_camera",
+       .allocator_type = PMEM_ALLOCATORTYPE_BITMAP,
+       .cached = 1,
+	.memory_type = MEMTYPE_EBI0,
+};
+
 static struct platform_device android_pmem_adsp_device = {
        .name = "android_pmem",
        .id = 2,
        .dev = { .platform_data = &android_pmem_adsp_pdata },
+};
+
+static struct platform_device android_pmem_camera_device = {
+       .name = "android_pmem",
+       .id = 3,
+       .dev = {.platform_data = &android_pmem_camera_pdata},
 };
 
 #if defined(CONFIG_CRYPTO_DEV_QCRYPTO) || \
@@ -3912,6 +3926,7 @@ static struct platform_device *devices[] __initdata = {
 	&sii_uio_dev,
 #endif /* CONFIG_FB_MSM_HDMI_SII9024A_PANEL */
 	&android_pmem_adsp_device,
+	&android_pmem_camera_device,
 	&msm_device_i2c,
 	&msm_device_i2c_2,
 	&msm_device_uart_dm1,
@@ -4688,6 +4703,14 @@ static int __init pmem_adsp_size_setup(char *p)
 }
 early_param("pmem_adsp_size", pmem_adsp_size_setup);
 
+static unsigned pmem_camera_size = MSM_PMEM_CAMERA_SIZE;
+static int __init pmem_camera_size_setup(char *p)
+{
+	pmem_camera_size = memparse(p, NULL);
+	return 0;
+}
+early_param("pmem_camera_size", pmem_camera_size_setup);
+
 static unsigned pmem_kernel_ebi0_size = PMEM_KERNEL_EBI0_SIZE;
 static int __init pmem_kernel_ebi0_size_setup(char *p)
 {
@@ -4711,6 +4734,7 @@ static void __init size_pmem_devices(void)
 {
 #ifdef CONFIG_ANDROID_PMEM
 	android_pmem_adsp_pdata.size = pmem_adsp_size;
+	android_pmem_camera_pdata.size = pmem_camera_size;
 	android_pmem_pdata.size = pmem_sf_size;
 #endif
 }
@@ -4724,6 +4748,7 @@ static void __init reserve_pmem_memory(void)
 {
 #ifdef CONFIG_ANDROID_PMEM
 	reserve_memory_for(&android_pmem_adsp_pdata);
+	reserve_memory_for(&android_pmem_camera_pdata);
 	reserve_memory_for(&android_pmem_pdata);
 	msm7x30_reserve_table[MEMTYPE_EBI0].size += pmem_kernel_ebi0_size;
 #endif
