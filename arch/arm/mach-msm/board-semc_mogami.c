@@ -157,12 +157,13 @@
 #endif
 #include "board-semc_mogami-touch.h"
 #include <mach/semc_rpc_server_handset.h>
+#ifdef CONFIG_CHARGER_BQ24185
 #include <linux/i2c/bq24185_charger.h>
+#endif
 #include <linux/i2c/bq27520_battery.h>
 #include <linux/battery_chargalg.h>
 #include <mach/semc_battery_data.h>
 
-#define BQ24185_GPIO_IRQ		(31)
 #define CYPRESS_TOUCH_GPIO_RESET	(40)
 #define CYPRESS_TOUCH_GPIO_IRQ		(42)
 #ifdef CONFIG_TOUCHSCREEN_CLEARPAD
@@ -450,17 +451,6 @@ static int pm8058_gpios_init(void)
 {
 	int rc;
 
-	struct pm8xxx_gpio_init_info bq24185_irq = {
-		PM8058_GPIO_PM_TO_SYS(BQ24185_GPIO_IRQ - 1),
-		{
-			.direction      = PM_GPIO_DIR_IN,
-			.pull           = PM_GPIO_PULL_NO,
-			.vin_sel        = PM8058_GPIO_VIN_S3,
-			.function       = PM_GPIO_FUNC_NORMAL,
-			.inv_int_pol    = 0,
-		},
-	};
-
 	struct pm8xxx_gpio_init_info sdc4_pwr_en = {
 		PM8058_GPIO_PM_TO_SYS(PMIC_GPIO_SDC4_PWR_EN_N),
 		{
@@ -488,12 +478,6 @@ static int pm8058_gpios_init(void)
 	rc = pm8xxx_gpio_config(sdcc_det.gpio, &sdcc_det.config);
 	if (rc) {
 		pr_err("%s PMIC_GPIO_SD_DET config failed\n", __func__);
-		return rc;
-	}
-
-	rc = pm8xxx_gpio_config(bq24185_irq.gpio, &bq24185_irq.config);
-	if (rc) {
-		pr_err("%s BQ24185_GPIO_IRQ config failed with %d\n", __func__, rc);
 		return rc;
 	}
 
@@ -2579,11 +2563,28 @@ struct bq27520_platform_data bq27520_platform_data = {
 #endif
 };
 
-/* Driver(s) to be notified upon change in charging */
+#ifdef CONFIG_CHARGER_BQ24185
+#define BQ24185_GPIO_IRQ	31
+
 static char *bq24185_supplied_to[] = {
 	BATTERY_CHARGALG_NAME,
 	SEMC_BDATA_NAME,
 };
+
+static int bq24185_gpio_configure(int enable)
+{
+	int rc = 0;
+
+	if (!!enable) {
+		rc = gpio_request(BQ24185_GPIO_IRQ, "bq24185");
+		if (rc)
+			pr_err("%s: gpio_requeset failed, "
+					"rc=%d\n", __func__, rc);
+	} else {
+		gpio_free(BQ24185_GPIO_IRQ);
+	}
+	return rc;
+}
 
 struct bq24185_platform_data bq24185_platform_data = {
 	.name = BQ24185_NAME,
@@ -2599,7 +2600,11 @@ struct bq24185_platform_data bq24185_platform_data = {
 #ifdef CONFIG_USB_MSM_OTG_72K
 	.notify_vbus_drop = msm_otg_notify_vbus_drop,
 #endif
+	.gpio_configure = bq24185_gpio_configure,
+	.vindpm_usb_compliant = VINDPM_4550MV,
+	.vindpm_non_compliant = VINDPM_4390MV,
 };
+#endif
 
 static struct battery_regulation_vs_temperature id_bat_reg = {
 	/* Cold, Normal, Warm, Overheat */
@@ -2847,12 +2852,14 @@ static struct i2c_board_info msm_i2c_board_info[] = {
 		.platform_data = &bq27520_platform_data,
 		.type = BQ27520_NAME,
 	},
+#ifdef CONFIG_CHARGER_BQ24185
 	{
-		I2C_BOARD_INFO(BQ24185_NAME, 0xd6 >> 1),
+		I2C_BOARD_INFO(BQ24185_NAME, 0xD6 >> 1),
+		.irq = MSM_GPIO_TO_INT(BQ24185_GPIO_IRQ),
 		.platform_data = &bq24185_platform_data,
 		.type = BQ24185_NAME,
-		.irq = PM8058_GPIO_IRQ(PMIC8058_IRQ_BASE, BQ24185_GPIO_IRQ - 1),
 	},
+#endif
 #ifdef CONFIG_INPUT_BMA150_NG
 	{
 		I2C_BOARD_INFO("bma150", 0x70 >> 1),
