@@ -97,7 +97,9 @@ static struct pll pll2_tbl[] = {
 	{ 58, 1, 3, 0 }, /* 58 * 19,2MHz = 1113,6 MHz */
 	{ 63, 1, 3, 0 }, /* 63 * 19,2MHz = 1209,6 MHz */
 	{ 68, 1, 3, 0 }, /* 68 * 19,2MHz = 1305,6 MHz */
-	{ 73, 0, 1, 0 }, /* 73 * 19,2MHz = 1401,6 MHz */
+	{ 73, 1, 3, 0 }, /* 73 * 19,2MHz = 1401,6 MHz */
+	{ 79, 1, 3, 0 }, /* 79 * 19,2MHz = 1516,8 MHz */
+	{ 84, 0, 1, 0 }, /* 84 * 19,2MHz = 1612,8 MHz */
 };
 
 /* Use negative numbers for sources that can't be enabled/disabled */
