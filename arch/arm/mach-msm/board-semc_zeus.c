@@ -3262,7 +3262,7 @@ static void __init zeus_temp_fixups(void)
 				GPIO_CFG_ENABLE);
 
 	/* Since the sequencing for AKM & BMA needs to be L10 -> L8 */
-	vreg_helper("gp4", 2850000, 1);  /* L10: BMA150, AK8975B */
+	vreg_helper("gp4", 2600000, 1);  /* L10: BMA150, AK8975B */
 
 	vreg_helper("wlan", 1800000, 1);  /* L13: touchpad VDIO */
 	vreg_helper("gp10", 2800000, 1);  /* L16: touchpad */
