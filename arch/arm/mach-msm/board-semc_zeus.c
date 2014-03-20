@@ -664,14 +664,14 @@ static uint32_t camera_on_gpio_table[] = {
 static void msm_camera_vreg_enable(void)
 {
 	vreg_helper("gp15", 1200000, 1); /* L22 */
-	vreg_helper("lvsw1", 1800000, 1); /* LVS1 */
+	//vreg_helper("lvsw1", 1800000, 1); /* LVS1 */
 	vreg_helper("gp2", 2800000, 1); /* L11 */
 }
 
 static void msm_camera_vreg_disable(void)
 {
 	vreg_helper("gp15", 1200000, 0); /* L22 */
-	vreg_helper("lvsw1", 1800000, 0); /* LVS1 */
+	//vreg_helper("lvsw1", 1800000, 0); /* LVS1 */
 	vreg_helper("gp2", 2800000, 0); /* L11 */
 }
 
